@@ -1,18 +1,14 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
-using TPUM;
-
-namespace TPUMTests
+namespace CalculatorTests
 {
     [TestClass]
     public class CalculatorTests
     {
-        private Calculator calculator;
+        private Calculator.Calculator calculator;
 
         [TestInitialize]
         public void Setup()
         {
-            calculator = new Calculator();
+            calculator = new Calculator.Calculator();
         }
 
         [TestMethod]

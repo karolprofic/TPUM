@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace TPUM
+﻿namespace Calculator
 {
     public class Calculator
     {
