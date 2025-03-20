@@ -1,15 +1,11 @@
+using CalculatorLibrary;
+
 namespace CalculatorTests
 {
     [TestClass]
-    public class CalculatorTests
+    public class Tests
     {
-        private Calculator.Calculator calculator;
-
-        [TestInitialize]
-        public void Setup()
-        {
-            calculator = new Calculator.Calculator();
-        }
+        private Calculator calculator = new Calculator();
 
         [TestMethod]
         public void AddShouldReturnCorrectSum()
