@@ -10,4 +10,5 @@ namespace Data.Interfaces
         Candidate GetCandidateById(Guid id);
         void Vote(Guid candidateId, string code);
     }
+
 }
