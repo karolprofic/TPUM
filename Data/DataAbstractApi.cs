@@ -5,11 +5,11 @@ using Data.Interfaces;
 
 namespace Data
 {
-    public abstract class DataAbstractApi
+    public abstract class DataAbstractAPI
     {
-        public static DataAbstractApi Create()
+        public static DataAbstractAPI Create()
         {
-            return new DataApi();
+            return new DataAPI();
         }
 
         public abstract IElection GetElection();

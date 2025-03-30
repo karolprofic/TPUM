@@ -8,7 +8,9 @@ namespace Data.Interfaces
     {
         List<Candidate> GetAllCandidates();
         Candidate GetCandidateById(Guid id);
+        string GetElectionTitle();
         void Vote(Guid candidateId, string code);
+        void SimulateVote();
     }
 
 }

@@ -6,11 +6,11 @@ using static System.Collections.Specialized.BitVector32;
 
 namespace Data
 {
-    internal class DataApi : DataAbstractApi
+    internal class DataAPI : DataAbstractAPI
     {
         private readonly Election election;
 
-        public DataApi()
+        public DataAPI()
         {
             election = new Election();
         }

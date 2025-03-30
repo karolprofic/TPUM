@@ -1,76 +1,50 @@
+using Model;
+using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Linq;
 using System.Windows.Input;
 
 namespace ViewModel
 {
-    public class CandidateViewModel : INotifyPropertyChanged
-    {
-        public Guid Id { get; set; }
-        public string Name { get; set; }
-        public string Surname { get; set; }
-
-        private int votes;
-        public int Votes
-        {
-            get => votes;
-            set
-            {
-                votes = value;
-                OnPropertyChanged(nameof(Votes));
-            }
-        }
-
-        public event PropertyChangedEventHandler PropertyChanged;
-        protected void OnPropertyChanged(string propertyName)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
-    }
 
     public class ViewModel : INotifyPropertyChanged
     {
-        private string keyAccess;
+        private string keyAccess = string.Empty;
         public string KeyAccess
         {
             get => keyAccess;
-            set
-            {
-                if (keyAccess != value)
-                {
-                    keyAccess = value;
-                    OnPropertyChanged(nameof(KeyAccess));
-                }
-            }
+            set => SetProperty(ref keyAccess, value);
         }
 
         private string electionTitle;
+        public string ElectionTitle { get => electionTitle; }
 
-        public string ElectionTitle
+        private ObservableCollection<CandidatePresentation> candidates;
+        public ObservableCollection<CandidatePresentation> Candidates
         {
-            get => electionTitle;
-            set
+            get => candidates;
+            private set
             {
-                if (electionTitle != value)
+                if (candidates != value)
                 {
-                    electionTitle = value;
-                    OnPropertyChanged(nameof(ElectionTitle));
+                    candidates = value;
+                    OnPropertyChanged("Candidates");
                 }
             }
         }
 
-        public ObservableCollection<CandidateViewModel> Candidates { get; } = new ObservableCollection<CandidateViewModel>();
 
         public ICommand VoteCommand { get; }
 
+        private Model.Model model;
+
         public ViewModel()
         {
-            electionTitle = "Wybory Prezydenckie 2025";
+            this.model = new Model.Model(null);
+            electionTitle = model.electionPresentation.GetElectionTitle();
             keyAccess = "";
-            Candidates.Add(new CandidateViewModel { Id = Guid.NewGuid(), Name = "Jan", Surname = "Kowalski", Votes = 0 });
-            Candidates.Add(new CandidateViewModel { Id = Guid.NewGuid(), Name = "Anna", Surname = "Nowak", Votes = 0 });
-            Candidates.Add(new CandidateViewModel { Id = Guid.NewGuid(), Name = "Piotr", Surname = "Wiœniewski", Votes = 0 });
-
+            Candidates = new ObservableCollection<CandidatePresentation>(model.electionPresentation.GetCandidates());
             VoteCommand = new RelayCommand(Vote);
         }
 
@@ -81,20 +55,29 @@ namespace ViewModel
                 var candidate = Candidates.FirstOrDefault(c => c.Id == candidateId);
                 if (candidate != null)
                 {
-                    if (keyAccess != null && keyAccess.Equals("111111"))
-                    {
-                        candidate.Votes++;
-                    }
+                    model.Vote(candidateId, keyAccess);
+                    RefreshView();
                     OnPropertyChanged(nameof(Candidates));
                 }
             }
         }
 
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        protected virtual void OnPropertyChanged(string propertyName)
+        private void RefreshView()
         {
+            Candidates = new ObservableCollection<CandidatePresentation>(model.electionPresentation.GetCandidates());
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+        protected void OnPropertyChanged(string propertyName) =>
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+
+        private void SetProperty<T>(ref T field, T value, [System.Runtime.CompilerServices.CallerMemberName] string propertyName = null)
+        {
+            if (!Equals(field, value))
+            {
+                field = value;
+                OnPropertyChanged(propertyName);
+            }
         }
     }
 }

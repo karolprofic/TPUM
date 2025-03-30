@@ -11,11 +11,13 @@ namespace Data
         private readonly Dictionary<Guid, Candidate> candidates = new Dictionary<Guid, Candidate>();
         private readonly object candidatesLock = new object();
         private readonly HashSet<string> availableCodes = new HashSet<string>();
-        private bool isVotingActive = true;
         private readonly object votingLock = new object();
+        private string electionTitle;
 
         public Election()
         {
+            electionTitle = "Wybory Prezydenckie 2025";
+
             AddCandidate(new Candidate("Jan", "Kowalski", 0));
             AddCandidate(new Candidate("Anna", "Nowak", 0));
             AddCandidate(new Candidate("Piotr", "Wiśniewski", 0));
@@ -36,12 +38,10 @@ namespace Data
             availableCodes.Add("901234");
             availableCodes.Add("012345");
 
-            SimulateVoting();
         }
 
         ~Election()
         {
-            isVotingActive = false;
             lock (votingLock) { }
         }
 
@@ -68,13 +68,18 @@ namespace Data
             }
         }
 
+        public string GetElectionTitle()
+        {
+            return electionTitle;
+        }
+
         public void Vote(Guid candidateId, string code)
         {
             lock (candidatesLock)
             {
                 if (!availableCodes.Contains(code))
                 {
-                    throw new InvalidOperationException("Code is invalid or already used.");
+                    return;
                 }
 
                 foreach (var candidate in candidates.Values)
@@ -86,8 +91,18 @@ namespace Data
                         return;
                     }
                 }
+            }
+        }
 
-                throw new KeyNotFoundException("No candidate found.");
+        public void SimulateVote() {
+            Random random = new Random();
+            lock (candidatesLock)
+            {
+                foreach (var candidate in candidates.Values)
+                {
+                    int votesToAdd = random.Next(1, 11);
+                    candidate.AddVotes(votesToAdd);
+                }
             }
         }
 
@@ -99,39 +114,5 @@ namespace Data
             }
         }
 
-        private async void SimulateVoting()
-        {
-            Random random = new Random();
-            while (true)
-            {
-                int delay = random.Next(1000, 3000);
-                await Task.Delay(delay);
-
-                lock (votingLock)
-                {
-                    if (!isVotingActive)
-                        break;
-                }
-
-                Candidate selectedCandidate;
-
-                lock (candidatesLock)
-                {
-                    if (candidates.Count == 0)
-                        continue;
-                    var candidateList = candidates.Values.ToList();
-                    selectedCandidate = candidateList[random.Next(candidateList.Count)];
-                }
-
-                int votesToAdd = random.Next(1, 11);
-                lock (candidatesLock)
-                {
-                    if (candidates.TryGetValue(selectedCandidate.Id, out var candidate))
-                    {
-                        candidate.AddVotes(votesToAdd);
-                    }
-                }
-            }
-        }
     }
 }

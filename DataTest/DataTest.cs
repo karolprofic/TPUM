@@ -37,7 +37,7 @@ namespace DataTest
         [TestMethod]
         public void ElectionCandidatesCountTest()
         {
-            IElection election = DataAbstractApi.Create().GetElection();
+            IElection election = DataAbstractAPI.Create().GetElection();
             var candidates = election.GetAllCandidates();
             Assert.AreEqual(8, candidates.Count, "The initial number of candidates should be 8.");
         }
@@ -45,7 +45,7 @@ namespace DataTest
         [TestMethod]
         public void ElectionVoteTest()
         {
-            IElection election = DataAbstractApi.Create().GetElection();
+            IElection election = DataAbstractAPI.Create().GetElection();
             var candidates = election.GetAllCandidates();
             var candidate = candidates.First();
             int baselineVotes = candidate.Votes;
@@ -59,7 +59,7 @@ namespace DataTest
         [ExpectedException(typeof(InvalidOperationException))]
         public void ElectionVoteInvalidCodeTest()
         {
-            IElection election = DataAbstractApi.Create().GetElection();
+            IElection election = DataAbstractAPI.Create().GetElection();
             var candidate = election.GetAllCandidates().First();
             election.Vote(candidate.Id, "invalidCode");
         }
@@ -68,7 +68,7 @@ namespace DataTest
         [ExpectedException(typeof(KeyNotFoundException))]
         public void ElectionVoteInvalidCandidateTest()
         {
-            IElection election = DataAbstractApi.Create().GetElection();
+            IElection election = DataAbstractAPI.Create().GetElection();
             election.Vote(Guid.NewGuid(), "234567");
         }
 
