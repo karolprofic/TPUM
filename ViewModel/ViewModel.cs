@@ -45,7 +45,14 @@ namespace ViewModel
             electionTitle = model.electionPresentation.GetElectionTitle();
             keyAccess = "";
             Candidates = new ObservableCollection<CandidatePresentation>(model.electionPresentation.GetCandidates());
+            model.electionPresentation.VotesChanged += OnVotesChanged;
+
             VoteCommand = new RelayCommand(Vote);
+        }
+
+        private void OnVotesChanged(object? sender, VotesChangeEventArgs e)
+        {
+            RefreshView();
         }
 
         private void Vote(object parameter)

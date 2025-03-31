@@ -9,11 +9,20 @@ namespace Model
 {
     public class ElectionPresentation
     {
+        public event EventHandler<VotesChangeEventArgs> VotesChanged;
+
         private IElectionSystem electionSystem { get; set; }
 
         public ElectionPresentation(IElectionSystem electionSystem)
         {
             this.electionSystem = electionSystem;
+            this.electionSystem.VotesChange += OnVotesChanged;
+        }
+
+        private void OnVotesChanged(object? sender, Logic.VotesChangeEventArgs e)
+        {
+            EventHandler<VotesChangeEventArgs> handler = VotesChanged;
+            handler?.Invoke(this, new VotesChangeEventArgs(e.Id, e.Votes));
         }
 
         public List<CandidatePresentation> GetCandidates()
@@ -28,6 +37,8 @@ namespace Model
         {
             return electionSystem.GetElectionTitle();
         }
+
+
 
     }
 }

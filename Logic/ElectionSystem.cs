@@ -11,12 +11,14 @@ namespace Logic
 {
     public class ElectionSystem : IElectionSystem
     {
+        public event EventHandler<VotesChangeEventArgs> VotesChange;
         private readonly IElection election;
         private bool votingSimulationActive = true;
 
         public ElectionSystem(IElection election)
         {
             this.election = election;
+            this.election.VotesChange += OnVotesChanged;
             SimulateVoting();
         }
 
@@ -60,6 +62,12 @@ namespace Logic
 
                 election.SimulateVote();
             }
+        }
+
+        private void OnVotesChanged(object sender, Data.VotesChangeEventArgs e)
+        {
+            EventHandler<VotesChangeEventArgs> handler = VotesChange;
+            handler?.Invoke(this, new Logic.VotesChangeEventArgs(e.Id, e.Votes));
         }
     }
 }
