@@ -3,14 +3,14 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Logic;
-using Logic.Interfaces; // Upewnij się, że interfejs IElectionSystem jest dostępny w tym namespace
+using Logic.Interfaces;
 
 namespace LogicTest
 {
     [TestClass]
     public class LogicTest
     {
-        private IElectionSystem electionSystem;
+        private IElectionSystem electionSystem = null!;
 
         [TestInitialize]
         public void Setup()
@@ -33,18 +33,22 @@ namespace LogicTest
             var candidate = candidates.First();
             Assert.IsFalse(string.IsNullOrWhiteSpace(candidate.Name));
             Assert.IsFalse(string.IsNullOrWhiteSpace(candidate.Surname));
+            Assert.AreEqual("Jan", candidate.Name);
+            Assert.AreEqual("Kowalski", candidate.Surname);
         }
 
         [TestMethod]
-        public void CastVote_WithValidCode_ShouldIncreaseCandidateVotes()
+        public void CastVoteWithValidCodeShouldIncreaseCandidateVotes()
         {
             var candidateDTO = electionSystem.GetCandidates().First();
             int initialVotes = candidateDTO.Votes;
             electionSystem.CastVote(candidateDTO.Id, "123456");
             var updatedCandidate = electionSystem.GetCandidates().First(c => c.Id == candidateDTO.Id);
-            Assert.IsTrue(updatedCandidate.Votes >= initialVotes + 1);
+            Assert.IsTrue(updatedCandidate.Votes == initialVotes + 1);
         }
 
+        // TODO: Remove + test or throw exceptions for simulate voting and this one
+        // TOOD: Use CandidateDTO instate of Candidate
         [TestMethod]
         public async Task VotesChangeEventShouldBeTriggeredOnVote()
         {
