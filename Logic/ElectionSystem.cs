@@ -54,7 +54,7 @@ namespace Logic
             Random random = new Random();
             while (true)
             {
-                int delay = random.Next(1000, 3000);
+                int delay = random.Next(2000, 6000);
                 await Task.Delay(delay);
 
                 if (!votingSimulationActive)

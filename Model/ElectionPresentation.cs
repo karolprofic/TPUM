@@ -38,7 +38,5 @@ namespace Model
             return electionSystem.GetElectionTitle();
         }
 
-
-
     }
 }
