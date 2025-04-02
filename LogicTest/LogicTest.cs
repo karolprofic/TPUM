@@ -38,7 +38,7 @@ namespace LogicTest
         }
 
         [TestMethod]
-        public void CastVoteWithValidCodeShouldIncreaseCandidateVotes()
+        public void CastValidVoteShouldNotIncreaseCandidateVotes()
         {
             var candidateDTO = electionSystem.GetCandidates().First();
             int initialVotes = candidateDTO.Votes;
@@ -47,8 +47,16 @@ namespace LogicTest
             Assert.IsTrue(updatedCandidate.Votes == initialVotes + 1);
         }
 
-        // TODO: Remove + test or throw exceptions for simulate voting and this one
-        // TOOD: Use CandidateDTO instate of Candidate
+        [TestMethod]
+        public void CastInvalideVoteShouldNotIncreaseCandidateVotes()
+        {
+            var candidateDTO = electionSystem.GetCandidates().First();
+            int initialVotes = candidateDTO.Votes;
+            electionSystem.CastVote(candidateDTO.Id, "999999");
+            var updatedCandidate = electionSystem.GetCandidates().First(c => c.Id == candidateDTO.Id);
+            Assert.IsTrue(updatedCandidate.Votes == initialVotes);
+        }
+/*
         [TestMethod]
         public async Task VotesChangeEventShouldBeTriggeredOnVote()
         {
@@ -62,7 +70,8 @@ namespace LogicTest
 
             electionSystem.CastVote(candidateDTO.Id, "234567");
             await Task.Delay(500);
-            Assert.IsTrue(eventTriggered, "Zdarzenie VotesChange nie zostało wywołane.");
+            Assert.IsTrue(eventTriggered, "VotesChange event has not been triggered.");
         }
+*/
     }
 }

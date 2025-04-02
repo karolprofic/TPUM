@@ -45,21 +45,21 @@ namespace Data
             lock (votingLock) { }
         }
 
-        public List<Candidate> GetAllCandidates()
+        public List<ICandidate> GetAllCandidates()
         {
             lock (candidatesLock)
             {
-                return candidates.Values.Select(c => (Candidate)c.Clone()).ToList();
+                return candidates.Values.Select(c => (ICandidate)c.Clone()).ToList();
             }
         }
 
-        public Candidate GetCandidateById(Guid id)
+        public ICandidate GetCandidateById(Guid id)
         {
             lock (candidatesLock)
             {
                 if (candidates.TryGetValue(id, out var candidate))
                 {
-                    return (Candidate)candidate.Clone();
+                    return (ICandidate)candidate.Clone();
                 }
                 else
                 {

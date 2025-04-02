@@ -23,22 +23,22 @@ namespace LogicTest
     {
         public event EventHandler<VotesChangeEventArgs> VotesChange = delegate { };
         private readonly List<ICandidate> candidates = [
-            new Candidate("Jan", "Kowalski", 0),
-            new Candidate("Anna", "Nowak", 0),
-            new Candidate("Piotr", "Wiśniewski", 0),
-            new Candidate("Maria", "Wiśniewska", 0)
+            new CandidateMock("Jan", "Kowalski", 0),
+            new CandidateMock("Anna", "Nowak", 0),
+            new CandidateMock("Piotr", "Wiśniewski", 0),
+            new CandidateMock("Maria", "Wiśniewska", 0)
         ];
         private readonly HashSet<string> availableCodes = ["123456", "234567", "345678", "456789", "567890"];
 
-        public List<Candidate> GetAllCandidates()
+        public List<ICandidate> GetAllCandidates()
         {
-            return candidates.Select(c => (Candidate)c.Clone()).ToList();
+            return candidates.Select(c => (ICandidate)c.Clone()).ToList();
         }
 
-        public Candidate GetCandidateById(Guid id)
+        public ICandidate GetCandidateById(Guid id)
         {
             var candidate = candidates.FirstOrDefault(c => c.Id == id);
-            return candidate == null ? throw new KeyNotFoundException("Candidate not found.") : (Candidate)candidate.Clone();
+            return candidate == null ? throw new KeyNotFoundException("Candidate not found.") : (ICandidate)candidate.Clone();
         }
 
         public string GetElectionTitle()
@@ -77,6 +77,45 @@ namespace LogicTest
         {
             VotesChange?.Invoke(this, new VotesChangeEventArgs(id, votes));
         }
+
+    }
+
+    public class CandidateMock : ICandidate, ICloneable
+    {
+        public Guid Id { get; }
+        public string Name { get; private set; }
+        public string Surname { get; private set; }
+        public int Votes { get; private set; }
+
+        public CandidateMock(string name, string surname, int votes)
+        {
+            Id = Guid.NewGuid();
+            Name = name;
+            Surname = surname;
+            Votes = votes;
+        }
+
+        private CandidateMock(Guid id, string name, string surname, int votes)
+        {
+            Id = id;
+            Name = name;
+            Surname = surname;
+            Votes = votes;
+        }
+
+        public object Clone()
+        {
+            return new CandidateMock(Id, Name, Surname, Votes);
+        }
+
+        public void AddVotes(int count)
+        {
+            if (count > 0)
+            {
+                Votes += count;
+            }
+        }
+
     }
 
 }

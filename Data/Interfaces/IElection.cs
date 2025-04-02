@@ -6,8 +6,8 @@ namespace Data.Interfaces
     public interface IElection
     {
         event EventHandler<VotesChangeEventArgs> VotesChange;
-        List<Candidate> GetAllCandidates();
-        Candidate GetCandidateById(Guid id);
+        List<ICandidate> GetAllCandidates();
+        ICandidate GetCandidateById(Guid id);
         string GetElectionTitle();
         void Vote(Guid candidateId, string code);
         void SimulateVote();
