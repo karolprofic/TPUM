@@ -16,7 +16,18 @@ namespace ViewModel
         }
 
         private string electionTitle;
-        public string ElectionTitle { get => electionTitle; }
+        public string ElectionTitle
+        {
+            get => electionTitle;
+            set
+            {
+                if (electionTitle != value)
+                {
+                    electionTitle = value;
+                    OnPropertyChanged(nameof(ElectionTitle));
+                }
+            }
+        }
 
         private ObservableCollection<CandidatePresentation> candidates = [];
         public ObservableCollection<CandidatePresentation> Candidates
@@ -69,6 +80,7 @@ namespace ViewModel
 
         private void RefreshView()
         {
+            ElectionTitle = model.electionPresentation.GetElectionTitle();
             Candidates = new ObservableCollection<CandidatePresentation>(model.electionPresentation.GetCandidates());
         }
 

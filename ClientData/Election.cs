@@ -152,7 +152,7 @@ namespace Data
             {
                 var messageObj = new
                 {
-                    Action = "CastVode",
+                    Action = "CastVote",
                     CandidateId = candidateId.ToString(),
                     AuthCode = code
                 };

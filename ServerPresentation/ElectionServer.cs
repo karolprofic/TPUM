@@ -69,6 +69,12 @@ namespace ServerPresentation
                     ElectionName = electionSystem.GetElectionTitle()
                 });
 
+                await SendMessageAsync(webSocket, new 
+                { 
+                    Action = "SendCandidates", 
+                    Candidates = electionSystem.GetCandidates()
+                });
+
                 Console.WriteLine($"[INFO] Sent election name: {electionSystem.GetElectionTitle()}");
 
                 await ProcessMessagesAsync(webSocket);
