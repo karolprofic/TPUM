@@ -49,8 +49,8 @@ namespace ServerPresentation
 
                 await SendMessageAsync(webSocket, new
                 {
-                    Action = "MakeConnections",
-                    ElectionName = electionSystem
+                    Action = "MakeConnection",
+                    ElectionName = electionSystem.GetElectionTitle()
                 });
                 await ProcessMessagesAsync(webSocket);
             }
