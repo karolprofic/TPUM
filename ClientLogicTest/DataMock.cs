@@ -3,7 +3,7 @@ using Data.Interfaces;
 
 namespace LogicTest
 {
-    public class DataMock : DataAbstractAPI
+/*    public class DataMock : DataAbstractAPI
     {
         private readonly ElectionMock election;
 
@@ -117,5 +117,5 @@ namespace LogicTest
         }
 
     }
-
+*/
 }

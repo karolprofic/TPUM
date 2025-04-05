@@ -4,21 +4,34 @@ using System.Text;
 using System.Text.Json;
 using ServerLogic;
 using ServerLogic.Interfaces;
+using System.Collections.Concurrent;
 
 namespace ServerPresentation
 {
     public class ElectionServer
     {
-        private readonly HttpListener _listener = new HttpListener();
+        public event EventHandler<VotesChangeEventArgs> VotesChanged;
 
+        private readonly HttpListener _listener = new HttpListener();
         private LogicAbstractAPI logicAbstractAPI;
         private IElectionSystem electionSystem;
+
+        private readonly ConcurrentBag<WebSocket> _clients = new ConcurrentBag<WebSocket>();
 
         public ElectionServer(string url)
         {
             logicAbstractAPI = LogicAbstractAPI.Create();
             electionSystem = logicAbstractAPI.GetElectionSystem();
+            electionSystem.VotesChange += OnVotesChanged;
             _listener.Prefixes.Add(url);
+        }
+
+        private void OnVotesChanged(object? sender, ServerLogic.VotesChangeEventArgs e)
+        {
+            Console.WriteLine("[LOGIC] Invoke VotesChangeEventArgs");
+            EventHandler<VotesChangeEventArgs> handler = VotesChanged;
+            handler?.Invoke(this, new VotesChangeEventArgs(e.Id, e.Votes));
+            _ = SendCandidatesToAllClients();
         }
 
         public async Task StartAsync()
@@ -48,6 +61,8 @@ namespace ServerPresentation
                 webSocket = (await context.AcceptWebSocketAsync(null)).WebSocket;
                 Console.WriteLine("[INFO] New WebSocket client connected.");
 
+                _clients.Add(webSocket);
+
                 await SendMessageAsync(webSocket, new
                 {
                     Action = "MakeConnection",
@@ -55,6 +70,7 @@ namespace ServerPresentation
                 });
 
                 Console.WriteLine($"[INFO] Sent election name: {electionSystem.GetElectionTitle()}");
+
                 await ProcessMessagesAsync(webSocket);
             }
             catch (Exception ex)
@@ -62,6 +78,20 @@ namespace ServerPresentation
                 Console.WriteLine($"[ERROR] Error during WebSocket handshake: {ex.Message}");
                 context.Response.StatusCode = 500;
                 context.Response.Close();
+            }
+        }
+
+        private async Task SendCandidatesToAllClients()
+        {
+            List<CandidateDTO> candidates = electionSystem.GetCandidates();
+            Console.WriteLine($"[INFO] Sending {candidates.Count} candidates to all clients.");
+
+            foreach (var webSocket in _clients)
+            {
+                if (webSocket.State == WebSocketState.Open)
+                {
+                    await SendMessageAsync(webSocket, new { Action = "SendCandidates", Candidates = candidates });
+                }
             }
         }
 
@@ -75,6 +105,7 @@ namespace ServerPresentation
                 if (result.MessageType == WebSocketMessageType.Close)
                 {
                     Console.WriteLine("[INFO] Client closed the connection.");
+                    _clients.TryTake(out _);
                     await webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None);
                     break;
                 }
@@ -106,7 +137,7 @@ namespace ServerPresentation
                     Console.WriteLine($"[INFO] Sending {candidates.Count} candidates to client.");
                     await SendMessageAsync(webSocket, new { Action = "SendCandidates", Candidates = candidates });
                 }
-                else if (action == "CastVode")
+                else if (action == "CastVote")
                 {
                     if (doc.RootElement.TryGetProperty("CandidateId", out JsonElement candidateIdElem) &&
                         doc.RootElement.TryGetProperty("AuthCode", out JsonElement authCodeElem))
@@ -123,7 +154,7 @@ namespace ServerPresentation
                     }
                     else
                     {
-                        Console.WriteLine("[WARN] Missing CandidateId or AuthCode in 'CastVode' request.");
+                        Console.WriteLine("[WARN] Missing CandidateId or AuthCode in 'CastVote' request.");
                     }
                 }
                 else

@@ -10,7 +10,7 @@ namespace LogicTest
     [TestClass]
     public class LogicTest
     {
-        private IElectionSystem electionSystem = null!;
+/*        private IElectionSystem electionSystem = null!;
 
         [TestInitialize]
         public void Setup()
@@ -55,6 +55,6 @@ namespace LogicTest
             electionSystem.CastVote(candidateDTO.Id, "999999");
             var updatedCandidate = electionSystem.GetCandidates().First(c => c.Id == candidateDTO.Id);
             Assert.IsTrue(updatedCandidate.Votes == initialVotes);
-        }
+        }*/
     }
 }

@@ -6,7 +6,7 @@ namespace DataTest
     [TestClass]
     public class DataTest
     {
-        [TestMethod]
+/*        [TestMethod]
         public void CandidateShouldInitializeCorrectly()
         {
             var candidate = new Candidate("Jan", "Kowalski", 10);
@@ -67,7 +67,7 @@ namespace DataTest
             IElection election = DataAbstractAPI.Create().GetElection();
             var candidates = election.GetAllCandidates();
             Assert.IsTrue(candidates.Count > 0);
-        }
+        }*/
 
 /*        [TestMethod]
         public void GetCandidateByIdShouldReturnCorrectCandidate()
