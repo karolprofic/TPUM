@@ -18,14 +18,22 @@ namespace Data
         {
             electionTitle = "Wybory Prezydenckie 2025";
 
-            AddCandidate(new Candidate("Jan", "Kowalski", 0));
-            AddCandidate(new Candidate("Anna", "Nowak", 0));
-            AddCandidate(new Candidate("Piotr", "Wiśniewski", 0));
-            AddCandidate(new Candidate("Maria", "Wiśniewska", 0));
-            AddCandidate(new Candidate("Tomasz", "Zieliński", 0));
-            AddCandidate(new Candidate("Agnieszka", "Kamińska", 0));
-            AddCandidate(new Candidate("Robert", "Lewandowski", 0));
-            AddCandidate(new Candidate("Ewa", "Kowalczyk", 0));
+            var candidate = new Candidate("Jan", "Kowalski", 0);
+            candidates.Add(candidate.Id, candidate);
+            candidate = new Candidate("Anna", "Nowak", 0);
+            candidates.Add(candidate.Id, candidate);
+            candidate = new Candidate("Piotr", "Wiśniewski", 0);
+            candidates.Add(candidate.Id, candidate);
+            candidate = new Candidate("Maria", "Wiśniewska", 0);
+            candidates.Add(candidate.Id, candidate);
+            candidate = new Candidate("Tomasz", "Zieliński", 0);
+            candidates.Add(candidate.Id, candidate);
+            candidate = new Candidate("Agnieszka", "Kamińska", 0);
+            candidates.Add(candidate.Id, candidate);
+            candidate = new Candidate("Robert", "Lewandowski", 0);
+            candidates.Add(candidate.Id, candidate);
+            candidate = new Candidate("Ewa", "Kowalczyk", 0);
+            candidates.Add(candidate.Id, candidate);
 
             availableCodes.Add("123456");
             availableCodes.Add("234567");
@@ -53,21 +61,6 @@ namespace Data
             }
         }
 
-        public ICandidate GetCandidateById(Guid id)
-        {
-            lock (candidatesLock)
-            {
-                if (candidates.TryGetValue(id, out var candidate))
-                {
-                    return (ICandidate)candidate.Clone();
-                }
-                else
-                {
-                    throw new KeyNotFoundException("Candidate not found.");
-                }
-            }
-        }
-
         public string GetElectionTitle()
         {
             return electionTitle;
@@ -92,27 +85,6 @@ namespace Data
                         return;
                     }
                 }
-            }
-        }
-
-        public void SimulateVote() {
-            Random random = new Random();
-            lock (candidatesLock)
-            {
-                foreach (var candidate in candidates.Values)
-                {
-                    int votesToAdd = random.Next(1, 11);
-                    candidate.AddVotes(votesToAdd);
-                    OnVotesChanged(candidate.Id, candidate.Votes);
-                }
-            }
-        }
-
-        private void AddCandidate(Candidate candidate)
-        {
-            lock (candidatesLock)
-            {
-                candidates.Add(candidate.Id, candidate);
             }
         }
 

@@ -1,10 +1,10 @@
-using Data;
-using Data.Interfaces;
+using ServerData;
+using ServerData.Interfaces;
 
-namespace DataTest
+namespace ServerDataTest
 {
     [TestClass]
-    public class DataTest
+    public class ServerDataTest
     {
         [TestMethod]
         public void CandidateShouldInitializeCorrectly()
@@ -69,7 +69,7 @@ namespace DataTest
             Assert.IsTrue(candidates.Count > 0);
         }
 
-/*        [TestMethod]
+        [TestMethod]
         public void GetCandidateByIdShouldReturnCorrectCandidate()
         {
             IElection election = DataAbstractAPI.Create().GetElection();
@@ -115,7 +115,7 @@ namespace DataTest
             election.SimulateVote();
             var updatedVotes = election.GetAllCandidates().Sum(c => c.Votes);
             Assert.IsTrue(updatedVotes > initialVotes);
-        }*/
+        }
 
     }
 }
