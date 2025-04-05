@@ -34,6 +34,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Client", "Client", "{D77E8D
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Server", "Server", "{E49E9ACB-126D-4C54-BC03-346AAB6F193F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServerPresentation", "ServerPresentation\ServerPresentation.csproj", "{A86819BF-2400-43DD-909B-F03B48ACEA05}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -84,6 +86,10 @@ Global
 		{ABB2B716-AFC6-4B3B-85F5-2E6380E99463}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{ABB2B716-AFC6-4B3B-85F5-2E6380E99463}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{ABB2B716-AFC6-4B3B-85F5-2E6380E99463}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A86819BF-2400-43DD-909B-F03B48ACEA05}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A86819BF-2400-43DD-909B-F03B48ACEA05}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A86819BF-2400-43DD-909B-F03B48ACEA05}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A86819BF-2400-43DD-909B-F03B48ACEA05}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -100,6 +106,7 @@ Global
 		{930AB532-1B9E-46E9-AFAC-4A9A63515136} = {E49E9ACB-126D-4C54-BC03-346AAB6F193F}
 		{FC6B6375-59D8-4CB8-9F2C-6A5F28793E85} = {E49E9ACB-126D-4C54-BC03-346AAB6F193F}
 		{ABB2B716-AFC6-4B3B-85F5-2E6380E99463} = {E49E9ACB-126D-4C54-BC03-346AAB6F193F}
+		{A86819BF-2400-43DD-909B-F03B48ACEA05} = {E49E9ACB-126D-4C54-BC03-346AAB6F193F}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {13ECB126-841F-4323-B5ED-6A43CBA55694}

@@ -56,22 +56,5 @@ namespace LogicTest
             var updatedCandidate = electionSystem.GetCandidates().First(c => c.Id == candidateDTO.Id);
             Assert.IsTrue(updatedCandidate.Votes == initialVotes);
         }
-/*
-        [TestMethod]
-        public async Task VotesChangeEventShouldBeTriggeredOnVote()
-        {
-            var candidateDTO = electionSystem.GetCandidates().First();
-            bool eventTriggered = false;
-            electionSystem.VotesChange += (sender, e) =>
-            {
-                if (e.Id == candidateDTO.Id)
-                    eventTriggered = true;
-            };
-
-            electionSystem.CastVote(candidateDTO.Id, "234567");
-            await Task.Delay(500);
-            Assert.IsTrue(eventTriggered, "VotesChange event has not been triggered.");
-        }
-*/
     }
 }
