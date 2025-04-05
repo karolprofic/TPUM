@@ -18,21 +18,21 @@ namespace Data
         {
             electionTitle = "Wybory Prezydenckie 2025";
 
-            var candidate = new Candidate("Jan", "Kowalski", 0);
+            var candidate = new Candidate(Guid.NewGuid(), "Jan", "Kowalski", 0);
             candidates.Add(candidate.Id, candidate);
-            candidate = new Candidate("Anna", "Nowak", 0);
+            candidate = new Candidate(Guid.NewGuid(), "Anna", "Nowak", 0);
             candidates.Add(candidate.Id, candidate);
-            candidate = new Candidate("Piotr", "Wiśniewski", 0);
+            candidate = new Candidate(Guid.NewGuid(), "Piotr", "Wiśniewski", 0);
             candidates.Add(candidate.Id, candidate);
-            candidate = new Candidate("Maria", "Wiśniewska", 0);
+            candidate = new Candidate(Guid.NewGuid(), "Maria", "Wiśniewska", 0);
             candidates.Add(candidate.Id, candidate);
-            candidate = new Candidate("Tomasz", "Zieliński", 0);
+            candidate = new Candidate(Guid.NewGuid(), "Tomasz", "Zieliński", 0);
             candidates.Add(candidate.Id, candidate);
-            candidate = new Candidate("Agnieszka", "Kamińska", 0);
+            candidate = new Candidate(Guid.NewGuid(), "Agnieszka", "Kamińska", 0);
             candidates.Add(candidate.Id, candidate);
-            candidate = new Candidate("Robert", "Lewandowski", 0);
+            candidate = new Candidate(Guid.NewGuid(), "Robert", "Lewandowski", 0);
             candidates.Add(candidate.Id, candidate);
-            candidate = new Candidate("Ewa", "Kowalczyk", 0);
+            candidate = new Candidate(Guid.NewGuid(), "Ewa", "Kowalczyk", 0);
             candidates.Add(candidate.Id, candidate);
 
             availableCodes.Add("123456");
@@ -79,7 +79,7 @@ namespace Data
                 {
                     if (candidate.Id == candidateId)
                     {
-                        candidate.AddVotes(1);
+                        candidate.Votes += 1;
                         availableCodes.Remove(code);
                         OnVotesChanged(candidate.Id, candidate.Votes);
                         return;

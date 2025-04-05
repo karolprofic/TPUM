@@ -8,6 +8,5 @@ namespace Data.Interfaces
         string Name { get; }
         string Surname { get; }
         int Votes { get; }
-        void AddVotes(int count);
     }
 }

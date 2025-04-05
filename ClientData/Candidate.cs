@@ -3,16 +3,17 @@ using Data.Interfaces;
 
 namespace Data
 {
+    // TODO: Change to private set
     public class Candidate : ICandidate, ICloneable
     {
-        public Guid Id { get; }
-        public string Name { get; private set; }
-        public string Surname { get; private set; }
-        public int Votes { get; private set; }
+        public Guid Id { get; set; }
+        public string Name { get; set; }
+        public string Surname { get; set; }
+        public int Votes { get; set; }
 
-        public Candidate(string name, string surname, int votes)
+        public Candidate(Guid id, string name, string surname, int votes)
         {
-            Id = Guid.NewGuid();
+            Id = id;
             Name = name;
             Surname = surname;
             Votes = votes;
@@ -24,14 +25,6 @@ namespace Data
             clone.Name = string.Copy(Name);
             clone.Surname = string.Copy(Surname);
             return clone;
-        }
-
-        public void AddVotes(int count)
-        {
-            if (count > 0)
-            {
-                Votes += count;
-            }
         }
 
         public override string ToString()
