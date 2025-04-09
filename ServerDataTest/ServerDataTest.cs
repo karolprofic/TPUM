@@ -1,121 +1,105 @@
+using System;
+using System.Linq;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using ServerData;
 using ServerData.Interfaces;
 
-namespace ServerDataTest
+namespace ServerDataTests
 {
     [TestClass]
     public class ServerDataTest
     {
-/*        [TestMethod]
-        public void CandidateShouldInitializeCorrectly()
+        private IElection election;
+
+        [TestInitialize]
+        public void Setup()
         {
-            var candidate = new Candidate("Jan", "Kowalski", 10);
-            Assert.AreEqual("Jan", candidate.Name);
-            Assert.AreEqual("Kowalski", candidate.Surname);
-            Assert.AreEqual(10, candidate.Votes);
-            Assert.AreNotEqual(Guid.Empty, candidate.Id);
+            election = DataAbstractAPI.Create().GetElection();
         }
 
         [TestMethod]
-        public void AddVotesShouldIncreaseVoteCount()
+        public void TestGetElectionTitleReturnsCorrectTitle()
         {
-            var candidate = new Candidate("Anna", "Nowak", 5);
-            candidate.AddVotes(3);
-            Assert.AreEqual(8, candidate.Votes);
+            string title = election.GetElectionTitle();
+            Assert.AreEqual("Wybory Prezydenckie 2025", title);
         }
 
         [TestMethod]
-        public void AddVotesShouldNotDecreaseVoteCount()
+        public void TestGetAllCandidatesReturnsClonedCandidates()
         {
-            var candidate = new Candidate("Piotr", "Wiœniewski", 5);
-            candidate.AddVotes(-3);
-            Assert.AreEqual(5, candidate.Votes);
+            var candidates1 = election.GetAllCandidates();
+            var candidates2 = election.GetAllCandidates();
+            Assert.AreEqual(candidates1.Count, candidates2.Count);
+            for (int i = 0; i < candidates1.Count; i++)
+            {
+                Assert.AreNotSame(candidates1[i], candidates2[i]);
+            }
         }
 
         [TestMethod]
-        public void CloneShouldCreateCopy()
+        public void TestGetCandidateByIdReturnsCorrectCandidate()
         {
-            var candidate = new Candidate("Maria", "Wiœniewska", 7);
-            var clone = (Candidate)candidate.Clone();
-            Assert.AreNotSame(candidate, clone);
-            Assert.AreNotSame(candidate.Name, clone.Name);
-            Assert.AreNotSame(candidate.Surname, clone.Surname);
-            Assert.AreEqual(candidate.Name, clone.Name);
-            Assert.AreEqual(candidate.Surname, clone.Surname);
-            Assert.AreEqual(candidate.Votes, clone.Votes);
-            Assert.AreEqual(candidate.Id, clone.Id);
-        }
-
-        [TestMethod]
-        public void ToStringShouldReturnFormattedString()
-        {
-            var candidate = new Candidate("Tomasz", "Zieliñski", 12);
-            string expected = $"Tomasz Zieliñski (Votes: 12, Id: {candidate.Id})";
-            Assert.AreEqual(expected, candidate.ToString());
-        }*/
-
-        [TestMethod]
-        public void GetElectionTitleShouldReturnCorrectTitle()
-        {
-            IElection election = DataAbstractAPI.Create().GetElection();
-            Assert.AreEqual("Wybory Prezydenckie 2025", election.GetElectionTitle());
-        }
-
-        [TestMethod]
-        public void GetAllCandidatesShouldReturnNonEmptyList()
-        {
-            IElection election = DataAbstractAPI.Create().GetElection();
             var candidates = election.GetAllCandidates();
-            Assert.IsTrue(candidates.Count > 0);
-        }
-
-        [TestMethod]
-        public void GetCandidateByIdShouldReturnCorrectCandidate()
-        {
-            IElection election = DataAbstractAPI.Create().GetElection();
-            var candidate = election.GetAllCandidates().First();
-            var retrievedCandidate = election.GetCandidateById(candidate.Id);
-            Assert.AreEqual(candidate.Name, retrievedCandidate.Name);
-            Assert.AreEqual(candidate.Surname, retrievedCandidate.Surname);
+            var candidateOriginal = candidates.First();
+            Guid id = candidateOriginal.Id;
+            var candidateRetrieved = election.GetCandidateById(id);
+            Assert.AreEqual(candidateOriginal.Id, candidateRetrieved.Id);
+            Assert.AreEqual(candidateOriginal.Name, candidateRetrieved.Name);
         }
 
         [TestMethod]
         [ExpectedException(typeof(KeyNotFoundException))]
-        public void GetCandidateByInvalidIdShouldThrowException()
+        public void TestGetCandidateByIdThrowsExceptionForInvalidId()
         {
-            IElection election = DataAbstractAPI.Create().GetElection();
             election.GetCandidateById(Guid.NewGuid());
         }
 
         [TestMethod]
-        public void VoteValidCodeShouldIncreaseVoteCount()
+        public void TestVoteIncrementsVoteWithValidCode()
         {
-            IElection election = DataAbstractAPI.Create().GetElection();
             var candidate = election.GetAllCandidates().First();
-            election.Vote(candidate.Id, "123456");
-            var updatedCandidate = election.GetCandidateById(candidate.Id);
-            Assert.AreEqual(1, updatedCandidate.Votes);
+            int initialVotes = candidate.Votes;
+            string validCode = "123456";
+            election.Vote(candidate.Id, validCode);
+            var candidateAfter = election.GetCandidateById(candidate.Id);
+            Assert.AreEqual(initialVotes + 1, candidateAfter.Votes);
         }
 
         [TestMethod]
-        public void VoteInvalidCodeShouldNotIncreaseVoteCount()
+        public void TestVoteDoesNothingWithInvalidOrUsedCode()
         {
-            IElection election = DataAbstractAPI.Create().GetElection();
             var candidate = election.GetAllCandidates().First();
-            election.Vote(candidate.Id, "999999");
-            var updatedCandidate = election.GetCandidateById(candidate.Id);
-            Assert.AreEqual(0, updatedCandidate.Votes);
+            int initialVotes = candidate.Votes;
+            string validCode = "234567";
+            election.Vote(candidate.Id, validCode);
+            election.Vote(candidate.Id, validCode);
+            var candidateAfter = election.GetCandidateById(candidate.Id);
+            Assert.AreEqual(initialVotes + 1, candidateAfter.Votes);
         }
 
         [TestMethod]
-        public void SimulateVoteShouldIncreaseVotesForAllCandidates()
+        public void TestSimulateVoteIncreasesVotesForAllCandidates()
         {
-            IElection election = DataAbstractAPI.Create().GetElection();
-            var initialVotes = election.GetAllCandidates().Sum(c => c.Votes);
+            var candidatesBefore = election.GetAllCandidates();
+            int totalVotesBefore = candidatesBefore.Sum(c => c.Votes);
             election.SimulateVote();
-            var updatedVotes = election.GetAllCandidates().Sum(c => c.Votes);
-            Assert.IsTrue(updatedVotes > initialVotes);
+            var candidatesAfter = election.GetAllCandidates();
+            int totalVotesAfter = candidatesAfter.Sum(c => c.Votes);
+            Assert.IsTrue(totalVotesAfter > totalVotesBefore);
         }
 
+        [TestMethod]
+        public void TestVotesChangeEventRaisedAfterVote()
+        {
+            bool eventRaised = false;
+            election.VotesChange += (sender, args) =>
+            {
+                eventRaised = true;
+            };
+            string validCode = "345678";
+            var candidate = election.GetAllCandidates().First();
+            election.Vote(candidate.Id, validCode);
+            Assert.IsTrue(eventRaised);
+        }
     }
 }

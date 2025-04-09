@@ -3,7 +3,6 @@ using Data.Interfaces;
 
 namespace Data
 {
-    // TODO: Change to private set
     public class Candidate : ICandidate, ICloneable
     {
         public Guid Id { get; set; }

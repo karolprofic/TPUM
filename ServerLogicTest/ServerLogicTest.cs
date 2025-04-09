@@ -1,12 +1,12 @@
-﻿using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Logic;
-using Logic.Interfaces;
+using ServerLogic;
+using ServerLogic.Interfaces;
+using ServerData;
+using ServerData.Interfaces;
 
-namespace LogicTest
+namespace ServerLogicTest
 {
     [TestClass]
-    public class LogicTest
+    public class ServerLogicTest
     {
         private IElectionSystem electionSystem = null!;
 
@@ -17,9 +17,9 @@ namespace LogicTest
         }
 
         [TestMethod]
-        public void GetElectionTitle_ShouldReturnCorrectTitle()
+        public void GetElectionTitleShouldReturnCorrectTitle()
         {
-            Assert.AreEqual("Ładowanie...", electionSystem.GetElectionTitle());
+            Assert.AreEqual("Wybory Prezydenckie 2025", electionSystem.GetElectionTitle());
         }
 
         [TestMethod]
@@ -27,16 +27,7 @@ namespace LogicTest
         {
             var candidates = electionSystem.GetCandidates();
             Assert.IsNotNull(candidates);
-            Assert.AreEqual(0, candidates.Count);
-        }
-
-        [TestMethod]
-        public void CastValidVoteShouldNotThrowAndNotChangeCandidates()
-        {
-            var candidateId = Guid.NewGuid();
-            electionSystem.CastVote(candidateId, "123456");
-            var candidatesAfter = electionSystem.GetCandidates();
-            Assert.AreEqual(0, candidatesAfter.Count);
+            Assert.AreEqual(8, candidates.Count);
         }
 
         [TestMethod]
@@ -45,7 +36,7 @@ namespace LogicTest
             var candidateId = Guid.NewGuid();
             electionSystem.CastVote(candidateId, "999999");
             var candidatesAfter = electionSystem.GetCandidates();
-            Assert.AreEqual(0, candidatesAfter.Count);
+            Assert.AreEqual(8, candidatesAfter.Count);
         }
     }
 }

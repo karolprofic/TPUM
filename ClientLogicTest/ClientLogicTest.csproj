@@ -23,5 +23,7 @@
   <ItemGroup>
 	<ProjectReference Include="..\ClientLogic\ClientLogic.csproj" />
   </ItemGroup>
-
+  <ItemGroup>
+	<ProjectReference Include="..\ClientLogic\ClientLogic.csproj" />
+  </ItemGroup>
 </Project>
