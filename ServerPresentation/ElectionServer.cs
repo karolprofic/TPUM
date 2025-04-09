@@ -1,10 +1,13 @@
-﻿using System.Net;
+﻿using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Net;
 using System.Net.WebSockets;
-using System.Text;
 using System.Text.Json;
+using System.Threading;
+using System.Threading.Tasks;
 using ServerLogic;
 using ServerLogic.Interfaces;
-using System.Collections.Concurrent;
 
 namespace ServerPresentation
 {
@@ -15,8 +18,7 @@ namespace ServerPresentation
         private readonly HttpListener _listener = new HttpListener();
         private LogicAbstractAPI logicAbstractAPI;
         private IElectionSystem electionSystem;
-
-        private readonly ConcurrentBag<WebSocket> _clients = new ConcurrentBag<WebSocket>();
+        private readonly ConcurrentBag<WebSocketConnection> _clients = new ConcurrentBag<WebSocketConnection>();
 
         public ElectionServer()
         {
@@ -29,8 +31,7 @@ namespace ServerPresentation
         private void OnVotesChanged(object? sender, ServerLogic.VotesChangeEventArgs e)
         {
             Console.WriteLine("[LOGIC] Invoke VotesChangeEventArgs");
-            EventHandler<VotesChangeEventArgs> handler = VotesChanged;
-            handler?.Invoke(this, new VotesChangeEventArgs());
+            VotesChanged?.Invoke(this, new VotesChangeEventArgs());
             _ = SendCandidatesToAllClients();
         }
 
@@ -55,29 +56,33 @@ namespace ServerPresentation
 
         private async Task HandleWebSocketAsync(HttpListenerContext context)
         {
-            WebSocket webSocket = null;
             try
             {
-                webSocket = (await context.AcceptWebSocketAsync(null)).WebSocket;
+                var wsContext = await context.AcceptWebSocketAsync(null);
+                var wsConnection = new WebSocketConnection(wsContext.WebSocket);
+                _clients.Add(wsConnection);
                 Console.WriteLine("[INFO] New WebSocket client connected.");
 
-                _clients.Add(webSocket);
+                wsConnection.OnMessageReceived += async (message) =>
+                {
+                    await HandleActionAsync(wsConnection, message);
+                };
 
-                await SendMessageAsync(webSocket, new
+                await wsConnection.SendMessageAsync(new
                 {
                     Action = "MakeConnection",
                     ElectionName = electionSystem.GetElectionTitle()
                 });
 
-                await SendMessageAsync(webSocket, new 
-                { 
-                    Action = "SendCandidates", 
+                await wsConnection.SendMessageAsync(new
+                {
+                    Action = "SendCandidates",
                     Candidates = electionSystem.GetCandidates()
                 });
 
                 Console.WriteLine($"[INFO] Sent election name: {electionSystem.GetElectionTitle()}");
 
-                await ProcessMessagesAsync(webSocket);
+                await wsConnection.ProcessMessagesAsync();
             }
             catch (Exception ex)
             {
@@ -92,38 +97,17 @@ namespace ServerPresentation
             List<CandidateDTO> candidates = electionSystem.GetCandidates();
             Console.WriteLine($"[INFO] Sending {candidates.Count} candidates to all clients.");
 
-            foreach (var webSocket in _clients)
+            foreach (var client in _clients)
             {
-                if (webSocket.State == WebSocketState.Open)
+                await client.SendMessageAsync(new
                 {
-                    await SendMessageAsync(webSocket, new { Action = "SendCandidates", Candidates = candidates });
-                }
+                    Action = "SendCandidates",
+                    Candidates = candidates
+                });
             }
         }
 
-        private async Task ProcessMessagesAsync(WebSocket webSocket)
-        {
-            var buffer = new byte[4096];
-
-            while (webSocket.State == WebSocketState.Open)
-            {
-                var result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
-                if (result.MessageType == WebSocketMessageType.Close)
-                {
-                    Console.WriteLine("[INFO] Client closed the connection.");
-                    _clients.TryTake(out _);
-                    await webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None);
-                    break;
-                }
-
-                string json = Encoding.UTF8.GetString(buffer, 0, result.Count);
-                Console.WriteLine($"[DEBUG] Received message: {json}");
-
-                await HandleActionAsync(webSocket, json);
-            }
-        }
-
-        private async Task HandleActionAsync(WebSocket webSocket, string json)
+        private async Task HandleActionAsync(WebSocketConnection connection, string json)
         {
             try
             {
@@ -141,7 +125,11 @@ namespace ServerPresentation
                 {
                     List<CandidateDTO> candidates = electionSystem.GetCandidates();
                     Console.WriteLine($"[INFO] Sending {candidates.Count} candidates to client.");
-                    await SendMessageAsync(webSocket, new { Action = "SendCandidates", Candidates = candidates });
+                    await connection.SendMessageAsync(new
+                    {
+                        Action = "SendCandidates",
+                        Candidates = candidates
+                    });
                 }
                 else if (action == "CastVote")
                 {
@@ -156,7 +144,11 @@ namespace ServerPresentation
                         Console.WriteLine("[INFO] Vote successfully cast.");
 
                         List<CandidateDTO> candidates = electionSystem.GetCandidates();
-                        await SendMessageAsync(webSocket, new { Action = "SendCandidates", Candidates = candidates });
+                        await connection.SendMessageAsync(new
+                        {
+                            Action = "SendCandidates",
+                            Candidates = candidates
+                        });
                     }
                     else
                     {
@@ -171,21 +163,6 @@ namespace ServerPresentation
             catch (Exception ex)
             {
                 Console.WriteLine("[ERROR] Exception while processing action: " + ex.Message);
-            }
-        }
-
-        private async Task SendMessageAsync(WebSocket webSocket, object messageObj)
-        {
-            try
-            {
-                string json = JsonSerializer.Serialize(messageObj);
-                byte[] bytes = Encoding.UTF8.GetBytes(json);
-                await webSocket.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, true, CancellationToken.None);
-                Console.WriteLine($"[DEBUG] Sent message: {json}");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("[ERROR] Failed to send message to client: " + ex.Message);
             }
         }
     }
