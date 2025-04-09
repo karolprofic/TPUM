@@ -6,6 +6,6 @@ namespace Model
 {
     public class VotesChangeEventArgs : EventArgs
     {
-        public VotesChangeEventArgs(Guid id, int votes) {}
+        public VotesChangeEventArgs() {}
     }
 }
