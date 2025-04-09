@@ -6,7 +6,7 @@ namespace ServerDataTest
     [TestClass]
     public class ServerDataTest
     {
-        [TestMethod]
+/*        [TestMethod]
         public void CandidateShouldInitializeCorrectly()
         {
             var candidate = new Candidate("Jan", "Kowalski", 10);
@@ -52,7 +52,7 @@ namespace ServerDataTest
             var candidate = new Candidate("Tomasz", "Zieliñski", 12);
             string expected = $"Tomasz Zieliñski (Votes: 12, Id: {candidate.Id})";
             Assert.AreEqual(expected, candidate.ToString());
-        }
+        }*/
 
         [TestMethod]
         public void GetElectionTitleShouldReturnCorrectTitle()

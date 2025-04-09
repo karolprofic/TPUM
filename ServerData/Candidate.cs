@@ -3,7 +3,7 @@ using ServerData.Interfaces;
 
 namespace ServerData
 {
-    public class Candidate : ICandidate, ICloneable
+    internal class Candidate : ICandidate, ICloneable
     {
         public Guid Id { get; }
         public string Name { get; private set; }

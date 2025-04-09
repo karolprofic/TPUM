@@ -9,7 +9,7 @@ using System.Linq;
 
 namespace Logic
 {
-    public class ElectionSystem : IElectionSystem
+    internal class ElectionSystem : IElectionSystem
     {
         public event EventHandler<VotesChangeEventArgs> VotesChange;
         private readonly IElection election;
