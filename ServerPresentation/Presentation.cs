@@ -4,7 +4,7 @@
     {
         static async Task Main(string[] args)
         {
-            ElectionServer server = new ElectionServer("http://localhost:5000/");
+            ElectionServer server = new ElectionServer();
             await server.StartAsync();
         }
     }

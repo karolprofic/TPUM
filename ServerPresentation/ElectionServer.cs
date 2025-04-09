@@ -18,19 +18,19 @@ namespace ServerPresentation
 
         private readonly ConcurrentBag<WebSocket> _clients = new ConcurrentBag<WebSocket>();
 
-        public ElectionServer(string url)
+        public ElectionServer()
         {
             logicAbstractAPI = LogicAbstractAPI.Create();
             electionSystem = logicAbstractAPI.GetElectionSystem();
             electionSystem.VotesChange += OnVotesChanged;
-            _listener.Prefixes.Add(url);
+            _listener.Prefixes.Add("http://localhost:5000/");
         }
 
         private void OnVotesChanged(object? sender, ServerLogic.VotesChangeEventArgs e)
         {
             Console.WriteLine("[LOGIC] Invoke VotesChangeEventArgs");
             EventHandler<VotesChangeEventArgs> handler = VotesChanged;
-            handler?.Invoke(this, new VotesChangeEventArgs(e.Id, e.Votes));
+            handler?.Invoke(this, new VotesChangeEventArgs());
             _ = SendCandidatesToAllClients();
         }
 

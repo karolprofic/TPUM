@@ -77,20 +77,14 @@ namespace ServerData
         {
             lock (candidatesLock)
             {
-                if (!availableCodes.Contains(code))
+                if (!availableCodes.Remove(code))
                 {
                     return;
                 }
-
-                foreach (var candidate in candidates.Values)
+                if (candidates.TryGetValue(candidateId, out var candidate))
                 {
-                    if (candidate.Id == candidateId)
-                    {
-                        candidate.AddVotes(1);
-                        availableCodes.Remove(code);
-                        OnVotesChanged(candidate.Id, candidate.Votes);
-                        return;
-                    }
+                    candidate.AddVotes(1);
+                    OnVotesChanged();
                 }
             }
         }
@@ -103,8 +97,8 @@ namespace ServerData
                 {
                     int votesToAdd = random.Next(1, 11);
                     candidate.AddVotes(votesToAdd);
-                    OnVotesChanged(candidate.Id, candidate.Votes);
                 }
+                OnVotesChanged();
             }
         }
 
@@ -116,10 +110,10 @@ namespace ServerData
             }
         }
 
-        private void OnVotesChanged(Guid id, int votes)
+        private void OnVotesChanged()
         {
             EventHandler<VotesChangeEventArgs> handler = VotesChange;
-            handler?.Invoke(this, new VotesChangeEventArgs(id, votes));
+            handler?.Invoke(this, new VotesChangeEventArgs());
         }
 
     }

@@ -67,7 +67,7 @@ namespace ServerLogic
         private void OnVotesChanged(object sender, ServerData.VotesChangeEventArgs e)
         {
             EventHandler<VotesChangeEventArgs> handler = VotesChange;
-            handler?.Invoke(this, new ServerLogic.VotesChangeEventArgs(e.Id, e.Votes));
+            handler?.Invoke(this, new ServerLogic.VotesChangeEventArgs());
         }
     }
 }
