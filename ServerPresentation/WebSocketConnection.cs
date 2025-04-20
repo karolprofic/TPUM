@@ -1,9 +1,6 @@
-﻿using System;
+﻿using Newtonsoft.Json;
 using System.Net.WebSockets;
 using System.Text;
-using System.Text.Json;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace ServerPresentation
 {
@@ -41,19 +38,25 @@ namespace ServerPresentation
             }
         }
 
-        public async Task SendMessageAsync(object messageObj)
+        public async Task SendMessageAsync(string json)
         {
             try
             {
-                string json = JsonSerializer.Serialize(messageObj);
                 byte[] bytes = Encoding.UTF8.GetBytes(json);
-                await _socket.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, true, CancellationToken.None);
-                Console.WriteLine($"[DEBUG] Sent message: {json}");
+                await _socket.SendAsync(
+                    new ArraySegment<byte>(bytes),
+                    WebSocketMessageType.Text,
+                    true,
+                    CancellationToken.None
+                ); Console.WriteLine($"[DEBUG] Sent message: {json}");
             }
             catch (Exception ex)
             {
                 Console.WriteLine("[ERROR] Failed to send message: " + ex.Message);
             }
         }
+
+        public Task SendMessageAsync(object messageObj)
+            => SendMessageAsync(JsonConvert.SerializeObject(messageObj));
     }
 }

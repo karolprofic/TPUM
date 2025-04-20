@@ -1,13 +1,6 @@
 ﻿using ClientData;
+using Commons;
 using Data.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.WebSockets;
-using System.Text.Json;
-using System.Text.Json.Nodes;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Data
 {
@@ -21,6 +14,7 @@ namespace Data
         private const string ServerUrl = "ws://localhost:5000/";
 
         private readonly ElectionClientConnection connection;
+        private readonly Commons.JsonSerializer _serializer = new Commons.JsonSerializer();
 
         public Election()
         {
@@ -33,36 +27,38 @@ namespace Data
         {
             try
             {
-                JsonNode? payload = JsonNode.Parse(json);
-                string action = payload?["Action"]?.ToString();
-                if (string.IsNullOrEmpty(action))
-                {
+                var baseMsg = _serializer.Deserialize<BaseMessage>(json);
+                if (baseMsg == null || string.IsNullOrEmpty(baseMsg.Action))
                     return;
-                }
 
-                if (action == "MakeConnection")
+                switch (baseMsg.Action)
                 {
-                    electionTitle = payload["ElectionName"]?.ToString() ?? electionTitle;
-                }
-                else if (action == "SendCandidates")
-                {
-                    var candidatesArray = payload["Candidates"]?.AsArray();
-                    if (candidatesArray == null) return;
-
-                    lock (candidatesLock)
-                    {
-                        candidates.Clear();
-                        foreach (var item in candidatesArray)
+                    case "MakeConnection":
                         {
-                            Guid id = Guid.Parse(item["Id"].ToString());
-                            string firstName = item["Name"].ToString();
-                            string lastName = item["Surname"].ToString();
-                            int votes = int.Parse(item["Votes"].ToString());
-                            var candidate = new Candidate(id, firstName, lastName, votes);
-                            candidates[id] = candidate;
-                            OnVotesChanged(id, votes);
+                            var conn = _serializer.Deserialize<ConnectionMessage>(json)!;
+                            electionTitle = conn.ElectionName;
+                            break;
                         }
-                    }
+                    case "SendCandidates":
+                        {
+                            var candidatesMsg = _serializer.Deserialize<CandidatesMessage>(json)!;
+                            lock (candidatesLock)
+                            {
+                                candidates.Clear();
+                                foreach (var dto in candidatesMsg.Candidates)
+                                {
+                                    var c = new Candidate(
+                                        dto.Id,
+                                        dto.Name,
+                                        dto.Surname,
+                                        dto.Votes
+                                    );
+                                    candidates[dto.Id] = c;
+                                    OnVotesChanged(dto.Id, dto.Votes);
+                                }
+                            }
+                            break;
+                        }
                 }
             }
             catch (Exception ex)

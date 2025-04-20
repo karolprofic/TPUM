@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
+﻿using System.Collections.Concurrent;
 using System.Net;
-using System.Net.WebSockets;
-using System.Text.Json;
-using System.Threading;
-using System.Threading.Tasks;
+using Commons;
 using ServerLogic;
 using ServerLogic.Interfaces;
 
@@ -16,15 +11,16 @@ namespace ServerPresentation
         public event EventHandler<VotesChangeEventArgs> VotesChanged;
 
         private readonly HttpListener _listener = new HttpListener();
-        private LogicAbstractAPI logicAbstractAPI;
-        private IElectionSystem electionSystem;
+        private readonly LogicAbstractAPI _logicAbstractAPI;
+        private readonly IElectionSystem _electionSystem;
+        private readonly JsonSerializer _serializer = new JsonSerializer();
         private readonly ConcurrentBag<WebSocketConnection> _clients = new ConcurrentBag<WebSocketConnection>();
 
         public ElectionServer()
         {
-            logicAbstractAPI = LogicAbstractAPI.Create();
-            electionSystem = logicAbstractAPI.GetElectionSystem();
-            electionSystem.VotesChange += OnVotesChanged;
+            _logicAbstractAPI = LogicAbstractAPI.Create();
+            _electionSystem = _logicAbstractAPI.GetElectionSystem();
+            _electionSystem.VotesChange += OnVotesChanged;
             _listener.Prefixes.Add("http://localhost:5000/");
         }
 
@@ -32,7 +28,7 @@ namespace ServerPresentation
         {
             Console.WriteLine("[LOGIC] Invoke VotesChangeEventArgs");
             VotesChanged?.Invoke(this, new VotesChangeEventArgs());
-            _ = SendCandidatesToAllClients();
+            _ = SendCandidatesToAllClientsAsync();
         }
 
         public async Task StartAsync()
@@ -63,107 +59,93 @@ namespace ServerPresentation
                 _clients.Add(wsConnection);
                 Console.WriteLine("[INFO] New WebSocket client connected.");
 
-                wsConnection.OnMessageReceived += async (message) =>
+                wsConnection.OnMessageReceived += async (raw) =>
                 {
-                    await HandleActionAsync(wsConnection, message);
+                    await HandleIncomingAsync(wsConnection, raw);
                 };
 
-                await wsConnection.SendMessageAsync(new
+                var connMsg = new ConnectionMessage
                 {
                     Action = "MakeConnection",
-                    ElectionName = electionSystem.GetElectionTitle()
-                });
+                    ElectionName = _electionSystem.GetElectionTitle()
+                };
+                await wsConnection.SendMessageAsync(_serializer.Serialize(connMsg));
 
-                await wsConnection.SendMessageAsync(new
-                {
-                    Action = "SendCandidates",
-                    Candidates = electionSystem.GetCandidates()
-                });
-
-                Console.WriteLine($"[INFO] Sent election name: {electionSystem.GetElectionTitle()}");
-
+                await SendCandidatesToClientAsync(wsConnection);
                 await wsConnection.ProcessMessagesAsync();
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[ERROR] Error during WebSocket handshake: {ex.Message}");
+                Console.WriteLine($"[ERROR] WebSocket handshake failed: {ex.Message}");
                 context.Response.StatusCode = 500;
                 context.Response.Close();
             }
         }
 
-        private async Task SendCandidatesToAllClients()
+        private async Task SendCandidatesToClientAsync(WebSocketConnection client)
         {
-            List<CandidateDTO> candidates = electionSystem.GetCandidates();
-            Console.WriteLine($"[INFO] Sending {candidates.Count} candidates to all clients.");
-
-            foreach (var client in _clients)
+            var dto = new CandidatesMessage
             {
-                await client.SendMessageAsync(new
-                {
-                    Action = "SendCandidates",
-                    Candidates = candidates
-                });
-            }
+                Action = "SendCandidates",
+                Candidates = _electionSystem.GetCandidates()
+            };
+            await client.SendMessageAsync(_serializer.Serialize(dto));
         }
 
-        private async Task HandleActionAsync(WebSocketConnection connection, string json)
+        private async Task SendCandidatesToAllClientsAsync()
+        {
+            var dto = new CandidatesMessage
+            {
+                Action = "SendCandidates",
+                Candidates = _electionSystem.GetCandidates()
+
+            };
+
+            var json = _serializer.Serialize(dto);
+            Console.WriteLine($"[INFO] Broadcasting candidates to {_clients.Count} clients.");
+
+            foreach (var client in _clients)
+                await client.SendMessageAsync(json);
+        }
+
+        private async Task HandleIncomingAsync(WebSocketConnection connection, string rawJson)
         {
             try
             {
-                using JsonDocument doc = JsonDocument.Parse(json);
-                if (!doc.RootElement.TryGetProperty("Action", out JsonElement actionElem))
+                var header = _serializer.GetAction(rawJson);
+                if (string.IsNullOrEmpty(header))
                 {
-                    Console.WriteLine("[WARN] Received message without 'Action' field.");
+                    Console.WriteLine("[WARN] No Header in incoming message.");
                     return;
                 }
 
-                string action = actionElem.GetString();
-                Console.WriteLine($"[INFO] Processing action: {action}");
-
-                if (action == "RequestCandidates")
+                Console.WriteLine($"[INFO] Received header: {header}");
+                switch (header)
                 {
-                    List<CandidateDTO> candidates = electionSystem.GetCandidates();
-                    Console.WriteLine($"[INFO] Sending {candidates.Count} candidates to client.");
-                    await connection.SendMessageAsync(new
-                    {
-                        Action = "SendCandidates",
-                        Candidates = candidates
-                    });
-                }
-                else if (action == "CastVote")
-                {
-                    if (doc.RootElement.TryGetProperty("CandidateId", out JsonElement candidateIdElem) &&
-                        doc.RootElement.TryGetProperty("AuthCode", out JsonElement authCodeElem))
-                    {
-                        Guid candidateId = candidateIdElem.GetGuid();
-                        string authCode = authCodeElem.GetString();
+                    case "RequestCandidates":
+                        await SendCandidatesToClientAsync(connection);
+                        break;
 
-                        Console.WriteLine($"[INFO] Attempting to cast vote for candidate: {candidateId}");
-                        electionSystem.CastVote(candidateId, authCode);
-                        Console.WriteLine("[INFO] Vote successfully cast.");
-
-                        List<CandidateDTO> candidates = electionSystem.GetCandidates();
-                        await connection.SendMessageAsync(new
+                    case "CastVote":
+                        var voteReq = _serializer.Deserialize<VoteRequestMessage>(rawJson);
+                        if (voteReq != null)
                         {
-                            Action = "SendCandidates",
-                            Candidates = candidates
-                        });
-                    }
-                    else
-                    {
-                        Console.WriteLine("[WARN] Missing CandidateId or AuthCode in 'CastVote' request.");
-                    }
-                }
-                else
-                {
-                    Console.WriteLine($"[WARN] Unknown action received: {action}");
+                            Console.WriteLine($"[INFO] Casting vote for {voteReq.CandidateId}");
+                            _electionSystem.CastVote(voteReq.CandidateId, voteReq.AuthCode);
+                            await SendCandidatesToClientAsync(connection);
+                        }
+                        break;
+
+                    default:
+                        Console.WriteLine($"[WARN] Unknown Action Type: {header}");
+                        break;
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine("[ERROR] Exception while processing action: " + ex.Message);
+                Console.WriteLine($"[ERROR] Handling incoming JSON failed: {ex.Message}");
             }
         }
+
     }
 }

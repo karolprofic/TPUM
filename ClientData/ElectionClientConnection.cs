@@ -1,10 +1,6 @@
-﻿using Data;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using Commons;
+using Data;
 using System.Net.WebSockets;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ClientData
 {
@@ -48,14 +44,14 @@ namespace ClientData
                 return;
             }
 
-            var messageObj = new
+            var msg = new VoteRequestMessage
             {
                 Action = "CastVote",
-                CandidateId = candidateId.ToString(),
+                CandidateId = candidateId,
                 AuthCode = code
             };
 
-            await wsConnection.SendMessageAsync(messageObj);
+            await wsConnection.SendMessageAsync(msg);
         }
     }
 
