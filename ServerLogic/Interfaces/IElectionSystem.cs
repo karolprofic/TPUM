@@ -4,9 +4,8 @@ using Commons;
 
 namespace ServerLogic.Interfaces
 {
-    public interface IElectionSystem
+    public interface IElectionSystem : IObservable<List<CandidateDTO>>
     {
-        event EventHandler<VotesChangeEventArgs> VotesChange;
         string GetElectionTitle();
         List<CandidateDTO> GetCandidates();
         void CastVote(Guid candidateId, string code);

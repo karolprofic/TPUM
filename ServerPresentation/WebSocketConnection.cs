@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using Commons;
+using Newtonsoft.Json;
 using System.Net.WebSockets;
 using System.Text;
 
@@ -23,13 +24,13 @@ namespace ServerPresentation
                 var result = await _socket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
                 if (result.MessageType == WebSocketMessageType.Close)
                 {
-                    Console.WriteLine("[INFO] Client closed the connection.");
                     await _socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None);
                     break;
                 }
 
                 string json = Encoding.UTF8.GetString(buffer, 0, result.Count);
-                Console.WriteLine($"[DEBUG] Received message: {json}");
+
+                Logger.Debug($"Received message: {json}");
 
                 if (OnMessageReceived != null)
                 {
@@ -48,11 +49,12 @@ namespace ServerPresentation
                     WebSocketMessageType.Text,
                     true,
                     CancellationToken.None
-                ); Console.WriteLine($"[DEBUG] Sent message: {json}");
+                );
+                Logger.Debug($"Sent message: {json}");
             }
             catch (Exception ex)
             {
-                Console.WriteLine("[ERROR] Failed to send message: " + ex.Message);
+                Logger.Error($"Failed to send message: {ex.Message}");
             }
         }
 

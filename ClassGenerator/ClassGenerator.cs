@@ -11,10 +11,10 @@ namespace ClassGenerator
         {
             JsonSchema candidateSchema = JsonSchema.FromType<CandidateDTO>();
             candidateSchema.Title = candidateSchema.Title + "Generated";
-            saveCSharpFile(candidateSchema, "../../../../Commons/CandidateDTOGenerated.cs");
+            SaveCSharpFile(candidateSchema, "../../../../Commons/CandidateDTOGenerated.cs");
         }
 
-        private static void saveCSharpFile(JsonSchema schema, string filename)
+        private static void SaveCSharpFile(JsonSchema schema, string filename)
         {
             CSharpGenerator generator = new CSharpGenerator(schema, new CSharpGeneratorSettings()
             {

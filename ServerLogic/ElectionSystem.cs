@@ -1,74 +1,94 @@
-﻿
-using ServerData;
+﻿using ServerLogic.Interfaces;
 using ServerData.Interfaces;
-using ServerLogic.Interfaces;
-using System.Threading.Tasks;
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Threading.Tasks;
 using Commons;
 
 namespace ServerLogic
 {
     public class ElectionSystem : IElectionSystem
     {
-        public event EventHandler<VotesChangeEventArgs> VotesChange;
-        private readonly IElection election;
-        private bool votingSimulationActive = true;
+        private readonly IElection _election;
+        private readonly List<IObserver<List<CandidateDTO>>> _observers = new();
+        private bool _simulationActive = true;
 
         public ElectionSystem(IElection election)
         {
-            this.election = election;
-            this.election.VotesChange += OnVotesChanged;
+            _election = election;
             SimulateVoting();
         }
 
         ~ElectionSystem()
         {
-            votingSimulationActive = false;
+            _simulationActive = false;
         }
 
-        public string GetElectionTitle()
-        {
-            return election.GetElectionTitle();
-        }
+        public string GetElectionTitle() => _election.GetElectionTitle();
 
         public List<CandidateDTO> GetCandidates()
         {
-            List<CandidateDTO> candidateDTOs = election.GetAllCandidates().Select(c => new CandidateDTO
+            return _election.GetAllCandidates().ConvertAll(c => new CandidateDTO
             {
                 Id = c.Id,
                 Name = c.Name,
                 Surname = c.Surname,
                 Votes = c.Votes
-            }).ToList();
-            return candidateDTOs;
+            });
         }
 
         public void CastVote(Guid candidateId, string code)
         {
-            election.Vote(candidateId, code); 
+            _election.Vote(candidateId, code);
+            NotifyObservers();
         }
 
         private async void SimulateVoting()
         {
-            Random random = new Random();
-            while (true)
+            var rnd = new Random();
+            while (_simulationActive)
             {
-                int delay = random.Next(2000, 6000);
-                await Task.Delay(delay);
-
-                if (!votingSimulationActive)
-                    break;
-
-                election.SimulateVote();
+                await Task.Delay(rnd.Next(2000, 6000));
+                _election.SimulateVote();
+                NotifyObservers();
             }
         }
 
-        private void OnVotesChanged(object sender, ServerData.VotesChangeEventArgs e)
+        private void NotifyObservers()
         {
-            EventHandler<VotesChangeEventArgs> handler = VotesChange;
-            handler?.Invoke(this, new ServerLogic.VotesChangeEventArgs());
+            var snapshot = GetCandidates();
+            foreach (var obs in _observers)
+            {
+                obs.OnNext(snapshot);
+            }
+        }
+
+        public IDisposable Subscribe(IObserver<List<CandidateDTO>> observer)
+        {
+            if (!_observers.Contains(observer))
+            {
+                _observers.Add(observer);
+            }
+            observer.OnNext(GetCandidates());
+            return new Unsubscriber(_observers, observer);
+        }
+
+        private class Unsubscriber : IDisposable
+        {
+            private readonly List<IObserver<List<CandidateDTO>>> _obs;
+            private readonly IObserver<List<CandidateDTO>> _observer;
+
+            public Unsubscriber(List<IObserver<List<CandidateDTO>>> obs, IObserver<List<CandidateDTO>> observer)
+            {
+                _obs = obs;
+                _observer = observer;
+            }
+
+            public void Dispose()
+            {
+                if (_obs.Contains(_observer))
+                    _obs.Remove(_observer);
+            }
         }
     }
 }
