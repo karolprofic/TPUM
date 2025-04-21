@@ -7,7 +7,6 @@ namespace ServerData
 {
     internal class Election : IElection
     {
-        public event EventHandler<VotesChangeEventArgs> VotesChange;
         private readonly Dictionary<Guid, Candidate> candidates = new Dictionary<Guid, Candidate>();
         private readonly object candidatesLock = new object();
         private readonly HashSet<string> availableCodes = new HashSet<string>();
@@ -84,7 +83,6 @@ namespace ServerData
                 if (candidates.TryGetValue(candidateId, out var candidate))
                 {
                     candidate.AddVotes(1);
-                    OnVotesChanged();
                 }
             }
         }
@@ -98,7 +96,6 @@ namespace ServerData
                     int votesToAdd = random.Next(1, 11);
                     candidate.AddVotes(votesToAdd);
                 }
-                OnVotesChanged();
             }
         }
 
@@ -108,12 +105,6 @@ namespace ServerData
             {
                 candidates.Add(candidate.Id, candidate);
             }
-        }
-
-        private void OnVotesChanged()
-        {
-            EventHandler<VotesChangeEventArgs> handler = VotesChange;
-            handler?.Invoke(this, new VotesChangeEventArgs());
         }
 
     }

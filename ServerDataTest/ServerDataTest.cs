@@ -87,19 +87,5 @@ namespace ServerDataTests
             int totalVotesAfter = candidatesAfter.Sum(c => c.Votes);
             Assert.IsTrue(totalVotesAfter > totalVotesBefore);
         }
-
-        [TestMethod]
-        public void TestVotesChangeEventRaisedAfterVote()
-        {
-            bool eventRaised = false;
-            election.VotesChange += (sender, args) =>
-            {
-                eventRaised = true;
-            };
-            string validCode = "345678";
-            var candidate = election.GetAllCandidates().First();
-            election.Vote(candidate.Id, validCode);
-            Assert.IsTrue(eventRaised);
-        }
     }
 }
