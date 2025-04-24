@@ -11,7 +11,8 @@ namespace ClassGenerator
         {
             JsonSchema candidateSchema = JsonSchema.FromType<CandidateDTO>();
             candidateSchema.Title = candidateSchema.Title + "Generated";
-            SaveCSharpFile(candidateSchema, "../../../../Commons/CandidateDTOGenerated.cs");
+            SaveCSharpFile(candidateSchema, "../../../../Commons/CSharp/CandidateDTOGenerated.cs");
+            SaveJsonFile(candidateSchema, "../../../../Commons/JSON/CandidateDTOGenerated.json");
         }
 
         private static void SaveCSharpFile(JsonSchema schema, string filename)
@@ -26,5 +27,12 @@ namespace ClassGenerator
 
             File.WriteAllText(filename, code);
         }
+
+        private static void SaveJsonFile(JsonSchema schema, string filename)
+        {
+            File.WriteAllText(filename, schema.ToJson());
+        }
+
+        
     }
 }
